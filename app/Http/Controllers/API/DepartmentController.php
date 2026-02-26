@@ -1,14 +1,50 @@
+```php
 <?php
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Department;
+use Illuminate\Validation\Rule;
 
 class DepartmentController extends Controller
 {
-    public function index(){ return Department::all(); }
-    public function store(Request $r){ return Department::create($r->all()); }
-    public function show($id){ return Department::findOrFail($id); }
-    public function update(Request $r,$id){ $d=Department::findOrFail($id); $d->update($r->all()); return $d; }
-    public function destroy($id){ Department::destroy($id); return response()->json(['deleted'=>true]); }
+    public function index()
+    {
+        return Department::paginate();
+    }
+
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255|unique:departments',
+        ]);
+
+        $department = Department::create($validatedData);
+
+        return response()->json($department, 201);
+    }
+
+    public function show(Department $department)
+    {
+        return $department;
+    }
+
+    public function update(Request $request, Department $department)
+    {
+        $validatedData = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('departments')->ignore($department->id)],
+        ]);
+        
+        $department->update($validatedData);
+        
+        return $department;
+    }
+
+    public function destroy(Department $department)
+    {
+        $department->delete();
+        
+        return response()->noContent();
+    }
 }
+```
