@@ -5,8 +5,12 @@ use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\DepartmentController;
 use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\LeaveController;
+use App\Http\Controllers\API\HealthCheckController;
 
 Route::get('/health', fn() => response()->json(['status' => 'HRMS API running']));
+
+// New comprehensive health check endpoint
+Route::get('/healthz', [HealthCheckController::class, 'index']);
 
 Route::apiResource('employees', EmployeeController::class);
 Route::apiResource('departments', DepartmentController::class);
