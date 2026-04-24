@@ -5,6 +5,7 @@ use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\DepartmentController;
 use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\LeaveController;
+use App\Http\Controllers\API\SchemaInfoController; // New import
 
 Route::get('/health', fn() => response()->json(['status' => 'HRMS API running']));
 
@@ -16,3 +17,7 @@ Route::post('attendance/check-out',[AttendanceController::class,'checkOut']);
 
 Route::post('leave/apply',[LeaveController::class,'apply']);
 Route::post('leave/approve/{id}',[LeaveController::class,'approve']);
+
+// AC-1: create a get end point for master tables view
+// Security: Endpoint must be protected. Using auth:sanctum middleware.
+Route::get('/schema-info', [SchemaInfoController::class, 'index'])->middleware('auth:sanctum');
