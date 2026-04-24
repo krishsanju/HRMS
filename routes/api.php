@@ -16,3 +16,6 @@ Route::post('attendance/check-out',[AttendanceController::class,'checkOut']);
 
 Route::post('leave/apply',[LeaveController::class,'apply']);
 Route::post('leave/approve/{id}',[LeaveController::class,'approve']);
+
+// AC1: Create a new route to cancel the leave by employee
+Route::patch('leave/{leaveRequest}/cancel', [LeaveController::class, 'cancel'])->middleware('auth:api');
