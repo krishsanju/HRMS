@@ -1,14 +1,18 @@
 <?php
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\EmployeeStoreRequest;
+use App\Http\Requests\EmployeeUpdateRequest;
 use App\Models\Employee;
 
 class EmployeeController extends Controller
 {
     public function index(){ return Employee::all(); }
-    public function store(Request $r){ return Employee::create($r->all()); }
+    public function store(EmployeeStoreRequest $request){ return Employee::create($request->validated()); }
     public function show($id){ return Employee::findOrFail($id); }
-    public function update(Request $r,$id){ $e=Employee::findOrFail($id); $e->update($r->all()); return $e; }
+    public function update(EmployeeUpdateRequest $request, Employee $employee){
+        $employee->update($request->validated());
+        return $employee;
+    }
     public function destroy($id){ Employee::destroy($id); return response()->json(['deleted'=>true]); }
 }
