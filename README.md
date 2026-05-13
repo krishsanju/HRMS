@@ -58,13 +58,33 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-## To automate comfluence using open ai
+## Seed Data Generation for HRMS Admin Panel
 
-Install --- composer require openai-php/laravel
+To populate the database with comprehensive seed data for the HRMS Admin Panel development, testing, and demonstration, follow these steps:
 
-publish config --- php artisan vendor:publish --tag=openai-config
+1.  **Ensure Database is Configured:** Make sure your `.env` file has the correct database connection details.
+2.  **Run Migrations and Seeders:** Execute the following Artisan command. This will drop all existing tables, run all migrations (including those for `leave_types`, `reason` in `leave_requests`, `role` in `users`, and `user_id` in `employees`), and then execute the `HrmsSeedRunner` to populate the database with diverse data.
 
-## To automate confluence using GCP
+    ```bash
+    php artisan migrate:fresh --seed
+    ```
+
+    Upon successful execution, your database will contain:
+    -   At least 5 administrator users.
+    -   20-30 employee users, each linked to an employee profile.
+    -   5-7 distinct departments.
+    -   3-5 distinct leave types with configurable parameters.
+    -   10-15 sample leave requests in various states (pending, approved, rejected) and date ranges.
+
+## AI Automation Setup
+
+### To automate Confluence using OpenAI
+
+Install --- `composer require openai-php/laravel`
+
+Publish config --- `php artisan vendor:publish --tag=openai-config`
+
+### To automate Confluence using GCP
 
 Go to https://console.cloud.google.com
 
@@ -74,18 +94,23 @@ Create Service account in IAM & Admin
 
 Download Json Key file
 
-Store in storage/app/gcp-key.json
+Store in `storage/app/gcp-key.json`
 
-Add to .env
+Add to `.env`
 
+```
 GOOGLE_APPLICATION_CREDENTIALS=storage/app/gcp-key.json
 GCP_PROJECT_ID=your-project-id
 GCP_LOCATION=us-central1
+```
 
-Install GCP Client -- composer require google/cloud-ai-platform
+Install GCP Client --- `composer require google/cloud-ai-platform`
 
-## To automate using Gemini AI ## using this currently
+### To automate using Gemini AI (currently in use)
 
 Generate API Key here https://aistudio.google.com/app/api-keys
 
-Add the key in .env
+Add the key in `.env`
+```
+GEMINI_API_KEY=your-gemini-api-key
+```
