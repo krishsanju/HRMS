@@ -32,6 +32,26 @@ export const useAuthStore = defineStore('auth', {
                 this.loading = false;
             }
         },
+        async register(payload) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await api.post('/register', payload);
+                this.token = response.data.token;
+                this.user = response.data.user;
+                localStorage.setItem('authToken', this.token);
+                localStorage.setItem('authUser', JSON.stringify(this.user));
+                api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+                return true;
+            } catch (error) {
+                const errors = error.response?.data?.errors;
+                this.error = errors ? Object.values(errors).flat()[0] : error.response?.data?.message || 'Registration failed';
+                console.error('Registration error:', error);
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
         async logout() {
             this.loading = true;
             try {

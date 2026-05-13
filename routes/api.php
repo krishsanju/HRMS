@@ -11,10 +11,12 @@ use App\Http\Controllers\API\AuthController;
 Route::get('/health', fn() => response()->json(['status' => 'HRMS API running']));
 
 // Public routes for authentication
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Protected routes for HR Admin Panel
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Dashboard

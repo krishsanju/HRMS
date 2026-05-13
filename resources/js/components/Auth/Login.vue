@@ -22,6 +22,9 @@
                             :disabled="authStore.loading">
                             {{ authStore.loading ? 'Logging in...' : 'Login' }}
                         </button>
+                        <router-link :to="{ name: 'Register' }" class="text-sm text-blue-600 hover:underline">
+                            Create account
+                        </router-link>
                     </div>
                 </div>
             </form>
@@ -32,7 +35,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '../../store';
 
 const authStore = useAuthStore();
 const router = useRouter();

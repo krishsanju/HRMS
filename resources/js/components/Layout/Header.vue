@@ -40,7 +40,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '../../store';
 
 const dropdownOpen = ref(false);
 const authStore = useAuthStore();
