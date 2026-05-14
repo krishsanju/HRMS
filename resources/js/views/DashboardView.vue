@@ -28,21 +28,15 @@
         </div>
     </div>
 
-    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-lg font-medium text-gray-700 mb-4">Recent Activities</h3>
-        <p v-if="loading" class="text-gray-500">Loading recent activities...</p>
-        <ul v-else-if="recentActivities.length">
-            <li v-for="activity in recentActivities" :key="activity.id" class="border-b py-2 last:border-b-0">
-                <span class="font-medium">{{ activity.type }}:</span> {{ activity.description }} - <span class="text-gray-500 text-sm">{{ activity.date }}</span>
-            </li>
-        </ul>
-        <p v-else class="text-gray-500">No recent activities.</p>
+    <div class="mt-8">
+        <RecentActivities :activities="recentActivities" :loading="loading" />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import api from '../api';
+import RecentActivities from '../components/Dashboard/RecentActivities.vue';
 
 const metrics = ref({
     totalEmployees: 0,
@@ -56,20 +50,35 @@ const metrics = ref({
 const recentActivities = ref([]);
 const loading = ref(true);
 
-const fetchDashboardMetrics = async () => {
+const fetchDashboardData = async () => {
     try {
-        const response = await api.get('/dashboard/metrics');
-        metrics.value = response.data;
-        // Assuming recent activities are part of dashboard metrics or a separate endpoint
-        recentActivities.value = response.data.recentActivities || [];
+        const [metricsRes, activitiesRes] = await Promise.all([
+            api.get('/dashboard/metrics'),
+            api.get('/activities')
+        ]);
+        metrics.value = metricsRes.data;
+        recentActivities.value = activitiesRes.data;
     } catch (error) {
-        console.error('Error fetching dashboard metrics:', error);
+        console.error('Error fetching dashboard data:', error);
     } finally {
         loading.value = false;
     }
 };
 
 onMounted(() => {
-    fetchDashboardMetrics();
+    fetchDashboardData();
+
+    window.Echo.channel('activities')
+        .listen('ActivityLogged', (e) => {
+            console.log('New activity received:', e.activity);
+            recentActivities.value.unshift(e.activity);
+            if (recentActivities.value.length > 10) {
+                recentActivities.value.pop();
+            }
+        });
+});
+
+onUnmounted(() => {
+    window.Echo.leave('activities');
 });
 </script>
