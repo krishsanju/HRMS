@@ -4,17 +4,23 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test": "vitest",
+        "coverage": "vitest run --coverage"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "@vitejs/plugin-vue": "^5.0.0",
+        "@vitest/coverage-v8": "^2.0.0",
+        "@vue/test-utils": "^2.4.6",
         "axios": "^1.6.0",
+        "jsdom": "^24.1.0",
         "laravel-vite-plugin": "^2.0.0",
+        "pinia": "^2.1.7",
         "tailwindcss": "^4.0.0",
         "vite": "^5.0.0",
+        "vitest": "^2.0.0",
         "vue": "^3.4.0",
-        "vue-router": "^4.3.0",
-        "pinia": "^2.1.7"
+        "vue-router": "^4.3.0"
     }
 }
