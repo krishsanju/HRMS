@@ -15,11 +15,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create a default admin user for logging in
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'HR Admin',
+            'email' => 'admin@hrms.com',
+        ]);
+
+        // Run individual seeders in the correct order
+        $this->call([
+            DepartmentSeeder::class,
+            LeaveTypeSeeder::class,
+            EmployeeSeeder::class,
+            LeaveRequestSeeder::class,
+            AttendanceSeeder::class,
         ]);
     }
 }
