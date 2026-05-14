@@ -21,6 +21,65 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Testing
+
+This project uses a combination of PHPUnit for backend testing and Vitest for frontend testing. Both are integrated into our CI/CD pipeline to run automatically on every push and pull request.
+
+### Backend (PHPUnit)
+
+The backend test suite uses PHPUnit to run feature and unit tests for the Laravel API.
+
+**Running Tests Locally:**
+
+To run the entire backend test suite, use the following Composer script:
+
+```bash
+composer test
+```
+
+This command will run all tests located in the `tests/` directory. By default, it uses an in-memory SQLite database to ensure tests are fast and do not affect your local development database.
+
+**Writing New Tests:**
+
+-   **Feature Tests:** These test a full request-response cycle. Place new feature tests in `tests/Feature`. Use them to test API endpoints, controller actions, and overall application behavior. See `tests/Feature/EmployeeApiTest.php` for an example.
+-   **Unit Tests:** These test a small, isolated piece of code (like a single method in a service class). Place new unit tests in `tests/Unit`.
+
+**Code Coverage:**
+
+To generate an HTML code coverage report, you can run PHPUnit directly with the coverage flag:
+
+```bash
+./vendor/bin/phpunit --coverage-html build/coverage/backend
+```
+
+The report will be available in the `build/coverage/backend` directory.
+
+### Frontend (Vitest)
+
+The frontend test suite uses Vitest to run unit tests for our Vue.js components.
+
+**Running Tests Locally:**
+
+To run the frontend test suite in watch mode (re-runs on file changes), use:
+
+```bash
+npm test
+```
+
+To run all tests once and generate a coverage report, use:
+
+```bash
+npm run coverage
+```
+
+The HTML coverage report will be generated in `build/coverage/frontend`.
+
+**Writing New Tests:**
+
+-   Component tests should be created in files ending with `.spec.js` or `.test.js`.
+-   It is best practice to co-locate test files with the components they are testing. For example, the test for `resources/js/components/Auth/Login.vue` is located at `resources/js/components/Auth/Login.spec.js`.
+-   Use `@vue/test-utils` to mount components and interact with them. See `Login.spec.js` for a practical example.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
@@ -57,35 +116,3 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## To automate comfluence using open ai
-
-Install --- composer require openai-php/laravel
-
-publish config --- php artisan vendor:publish --tag=openai-config
-
-## To automate confluence using GCP
-
-Go to https://console.cloud.google.com
-
-Create Project and Enable Vertex AI API
-
-Create Service account in IAM & Admin
-
-Download Json Key file
-
-Store in storage/app/gcp-key.json
-
-Add to .env
-
-GOOGLE_APPLICATION_CREDENTIALS=storage/app/gcp-key.json
-GCP_PROJECT_ID=your-project-id
-GCP_LOCATION=us-central1
-
-Install GCP Client -- composer require google/cloud-ai-platform
-
-## To automate using Gemini AI ## using this currently
-
-Generate API Key here https://aistudio.google.com/app/api-keys
-
-Add the key in .env
