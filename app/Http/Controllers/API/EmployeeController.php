@@ -5,38 +5,58 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Employee::with('department');
+        $query = Employee::query()->with('department');
 
-        // Search by name or email
-        if ($request->has('search')) {
+        // Search by name, email or employee code
+        if ($request->filled('search')) {
             $searchTerm = '%' . $request->search . '%';
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('first_name', 'like', $searchTerm)
-                    ->orWhere('last_name', 'like', $searchTerm)
-                    ->orWhere('email', 'like', $searchTerm);
+                $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', $searchTerm)
+                    ->orWhere('email', 'like', $searchTerm)
+                    ->orWhere('employee_code', 'like', $searchTerm);
             });
         }
 
         // Filter by department_id
-        if ($request->has('department_id')) {
+        if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
         }
 
         // Filter by status
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         // Sorting
-        if ($request->has('sort_by') && $request->has('sort_direction')) {
-            $query->orderBy($request->sort_by, $request->sort_direction);
+        $sortBy = $request->input('sort_by', 'first_name');
+        $sortOrder = $request->input('sort_order', 'asc');
+
+        // Whitelist of sortable columns on the employees table
+        $sortableColumns = ['employee_code', 'first_name', 'position', 'hire_date'];
+
+        if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        if ($sortBy === 'department_name') {
+            $query->join('departments', 'employees.department_id', '=', 'departments.id')
+                  ->orderBy('departments.name', $sortOrder)
+                  ->select('employees.*'); // Select only employee columns to avoid ambiguity
+        } elseif (in_array($sortBy, $sortableColumns)) {
+            $query->orderBy($sortBy, $sortOrder);
+            // Add secondary sort for name
+            if ($sortBy === 'first_name') {
+                $query->orderBy('last_name', $sortOrder);
+            }
         } else {
-            $query->orderBy('last_name')->orderBy('first_name');
+            // Default sort
+            $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc');
         }
 
         return $query->paginate($request->get('per_page', 15));
@@ -53,6 +73,8 @@ class EmployeeController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'joining_date' => 'required|date',
             'status' => 'required|in:active,inactive,on_leave,terminated',
+            'position' => 'required|string|max:255',
+            'hire_date' => 'required|date',
         ]);
 
         return Employee::create($validatedData);
@@ -76,6 +98,8 @@ class EmployeeController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'joining_date' => 'required|date',
             'status' => 'required|in:active,inactive,on_leave,terminated',
+            'position' => 'required|string|max:255',
+            'hire_date' => 'required|date',
         ]);
 
         $employee->update($validatedData);
