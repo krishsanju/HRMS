@@ -10,7 +10,36 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Employee::with('department');
+        // Whitelist of sortable columns to prevent arbitrary column sorting.
+        $sortableColumns = ['first_name', 'employee_code', 'email', 'status', 'position', 'joining_date'];
+        $sortableRelations = ['department_name'];
+
+        $sortBy = $request->query('sort_by', 'first_name'); // Default sort column
+        $sortOrder = $request->query('sort_order', 'asc');   // Default sort order
+
+        // Validate sortOrder
+        if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        $query = Employee::query();
+
+        // Handle sorting
+        if (in_array($sortBy, $sortableColumns)) {
+            $query->orderBy($sortBy, $sortOrder);
+            // Add secondary sort for name for better user experience
+            if ($sortBy === 'first_name') {
+                $query->orderBy('last_name', $sortOrder);
+            }
+        } elseif ($sortBy === 'department_name' && in_array($sortBy, $sortableRelations)) {
+            // Handle sorting by a related model's column
+            $query->join('departments', 'employees.department_id', '=', 'departments.id')
+                  ->orderBy('departments.name', $sortOrder)
+                  ->select('employees.*'); // Avoid column name conflicts
+        } else {
+            // Fallback to default sort if sortBy is invalid
+            $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc');
+        }
 
         // Search by name or email
         if ($request->has('search')) {
@@ -24,20 +53,16 @@ class EmployeeController extends Controller
 
         // Filter by department_id
         if ($request->has('department_id')) {
-            $query->where('department_id', $request->department_id);
+            $query->where('employees.department_id', $request->department_id);
         }
 
         // Filter by status
         if ($request->has('status')) {
-            $query->where('status', $request->status);
+            $query->where('employees.status', $request->status);
         }
 
-        // Sorting
-        if ($request->has('sort_by') && $request->has('sort_direction')) {
-            $query->orderBy($request->sort_by, $request->sort_direction);
-        } else {
-            $query->orderBy('last_name')->orderBy('first_name');
-        }
+        // Eager load relationships
+        $query->with('department');
 
         return $query->paginate($request->get('per_page', 15));
     }

@@ -26,11 +26,21 @@
         <table v-else class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th @click="handleSort('employee_code')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Code <span v-if="sortBy === 'employee_code'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('first_name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Name <span v-if="sortBy === 'first_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('email')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Email <span v-if="sortBy === 'email'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('department_name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Department <span v-if="sortBy === 'department_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Status <span v-if="sortBy === 'status'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -76,6 +86,9 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const perPage = ref(15);
 
+const sortBy = ref('first_name');
+const sortOrder = ref('asc');
+
 const fetchEmployees = async () => {
     loading.value = true;
     error.value = null;
@@ -86,8 +99,10 @@ const fetchEmployees = async () => {
             search: searchQuery.value || undefined,
             department_id: filterDepartment.value || undefined,
             status: filterStatus.value || undefined,
+            sort_by: sortBy.value,
+            sort_order: sortOrder.value,
         };
-        const response = await api.get('/employees-paginated', { params });
+        const response = await api.get('/employees', { params });
         employees.value = response.data.data;
         currentPage.value = response.data.current_page;
         totalPages.value = response.data.last_page;
@@ -106,6 +121,16 @@ const fetchDepartments = async () => {
     } catch (err) {
         console.error('Error fetching departments:', err);
     }
+};
+
+const handleSort = (column) => {
+    if (sortBy.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortOrder.value = 'asc';
+    }
+    fetchEmployees(); // Re-fetch data with new sort parameters
 };
 
 const deleteEmployee = async (id) => {
