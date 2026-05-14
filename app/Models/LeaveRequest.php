@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveRequest extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'employee_id',
+        'leave_type_id',
         'from_date',
         'to_date',
         'status',
         'reason',
-        'leave_type',
         'rejection_reason'
     ];
 
@@ -25,7 +28,14 @@ class LeaveRequest extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    // Add any necessary casts for dates if not already handled by Laravel
+    /**
+     * Get the type of leave for the request.
+     */
+    public function leaveType(): BelongsTo
+    {
+        return $this->belongsTo(LeaveType::class);
+    }
+
     protected $casts = [
         'from_date' => 'date',
         'to_date' => 'date',
