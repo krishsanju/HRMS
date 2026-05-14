@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Employee;
@@ -22,12 +23,6 @@ class DashboardController extends Controller
         // Today's check-ins
         $todayCheckIns = Attendance::whereDate('check_in', today())->count();
 
-        // You can add more complex metrics here, e.g., recent activities, attendance summaries
-        $recentActivities = [
-            ['id' => 1, 'type' => 'Leave Approved', 'description' => "John Doe's vacation leave approved.", 'date' => now()->subHours(2)->diffForHumans()],
-            ['id' => 2, 'type' => 'New Employee', 'description' => 'Jane Smith joined Engineering.', 'date' => now()->subDay()->diffForHumans()],
-        ];
-
         return response()->json([
             'totalEmployees' => $totalEmployees,
             'activeEmployees' => $activeEmployees,
@@ -35,7 +30,16 @@ class DashboardController extends Controller
             'approvedLeaveRequests' => $approvedLeaveRequests,
             'todayCheckIns' => $todayCheckIns,
             'totalDepartments' => $totalDepartments,
-            'recentActivities' => $recentActivities, // Placeholder
         ]);
+    }
+
+    public function recentActivities(Request $request)
+    {
+        $activities = Activity::with(['user', 'subject'])
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return response()->json($activities);
     }
 }

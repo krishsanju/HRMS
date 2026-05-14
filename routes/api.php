@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/metrics', [DashboardController::class, 'metrics']);
+    Route::get('/activities', [DashboardController::class, 'recentActivities']);
 
     // Employee Management
     Route::apiResource('employees', EmployeeController::class);
