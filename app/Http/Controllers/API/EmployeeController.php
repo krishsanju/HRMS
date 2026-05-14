@@ -10,7 +10,34 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Employee::with('department');
+        $query = Employee::query();
+
+        // Whitelist of sortable columns to prevent arbitrary column sorting.
+        $sortableColumns = ['first_name', 'employee_code', 'position', 'hire_date', 'department_name'];
+        $sortBy = $request->input('sort_by', 'first_name');
+        $sortOrder = $request->input('sort_order', 'asc');
+
+        // Validate sort_by against the whitelist
+        if (!in_array($sortBy, $sortableColumns)) {
+            $sortBy = 'first_name';
+        }
+
+        // Validate sort_order
+        if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        // Handle sorting by department name, which requires a join
+        if ($sortBy === 'department_name') {
+            $query->join('departments', 'employees.department_id', '=', 'departments.id')
+                  ->orderBy('departments.name', $sortOrder)
+                  ->select('employees.*'); // Select only employee columns to avoid conflicts
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // Eager load department after sorting is established
+        $query->with('department');
 
         // Search by name or email
         if ($request->has('search')) {
@@ -30,13 +57,6 @@ class EmployeeController extends Controller
         // Filter by status
         if ($request->has('status')) {
             $query->where('status', $request->status);
-        }
-
-        // Sorting
-        if ($request->has('sort_by') && $request->has('sort_direction')) {
-            $query->orderBy($request->sort_by, $request->sort_direction);
-        } else {
-            $query->orderBy('last_name')->orderBy('first_name');
         }
 
         return $query->paginate($request->get('per_page', 15));

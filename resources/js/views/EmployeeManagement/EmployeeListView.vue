@@ -15,7 +15,7 @@
                 <option value="on_leave">On Leave</option>
                 <option value="terminated">Terminated</option>
             </select>
-            <router-link :to="{ name: 'EmployeeCreate' }" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ml-4">
+            <router-link :to="{ name: 'EmployeeCreate' }" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ml-4 whitespace-nowrap">
                 Add Employee
             </router-link>
         </div>
@@ -26,10 +26,22 @@
         <table v-else class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th @click="handleSort('employee_code')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Employee ID <span v-if="sortBy === 'employee_code'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('first_name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Name <span v-if="sortBy === 'first_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th @click="handleSort('department_name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Department <span v-if="sortBy === 'department_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('position')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Job Title <span v-if="sortBy === 'position'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th @click="handleSort('hire_date')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                        Hire Date <span v-if="sortBy === 'hire_date'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -40,6 +52,8 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ employee.first_name }} {{ employee.last_name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ employee.email }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ employee.department ? employee.department.name : 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ employee.position }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ employee.hire_date }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span :class="{'bg-green-100 text-green-800': employee.status === 'active', 'bg-red-100 text-red-800': employee.status === 'terminated', 'bg-yellow-100 text-yellow-800': employee.status === 'on_leave'}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
                             {{ employee.status }}
@@ -54,9 +68,9 @@
         </table>
 
         <div class="mt-4 flex justify-between items-center">
-            <button @click="prevPage" :disabled="currentPage === 1" class="px-4 py-2 bg-gray-300 rounded-md">Previous</button>
+            <button @click="prevPage" :disabled="currentPage === 1" class="px-4 py-2 bg-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
             <span>Page {{ currentPage }} of {{ totalPages }}</span>
-            <button @click="nextPage" :disabled="currentPage === totalPages" class="px-4 py-2 bg-gray-300 rounded-md">Next</button>
+            <button @click="nextPage" :disabled="currentPage === totalPages" class="px-4 py-2 bg-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
         </div>
     </div>
 </template>
@@ -76,6 +90,9 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const perPage = ref(15);
 
+const sortBy = ref('first_name');
+const sortOrder = ref('asc');
+
 const fetchEmployees = async () => {
     loading.value = true;
     error.value = null;
@@ -86,8 +103,10 @@ const fetchEmployees = async () => {
             search: searchQuery.value || undefined,
             department_id: filterDepartment.value || undefined,
             status: filterStatus.value || undefined,
+            sort_by: sortBy.value,
+            sort_order: sortOrder.value,
         };
-        const response = await api.get('/employees-paginated', { params });
+        const response = await api.get('/employees', { params });
         employees.value = response.data.data;
         currentPage.value = response.data.current_page;
         totalPages.value = response.data.last_page;
@@ -97,6 +116,16 @@ const fetchEmployees = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const handleSort = (column) => {
+    if (sortBy.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortOrder.value = 'asc';
+    }
+    // The watcher will automatically call fetchEmployees
 };
 
 const fetchDepartments = async () => {
@@ -123,14 +152,12 @@ const deleteEmployee = async (id) => {
 const nextPage = () => {
     if (currentPage.value < totalPages.value) {
         currentPage.value++;
-        fetchEmployees();
     }
 };
 
 const prevPage = () => {
     if (currentPage.value > 1) {
         currentPage.value--;
-        fetchEmployees();
     }
 };
 
@@ -139,8 +166,14 @@ onMounted(() => {
     fetchEmployees();
 });
 
+// Watch for changes in filters and reset to page 1
 watch([searchQuery, filterDepartment, filterStatus], () => {
-    currentPage.value = 1; // Reset to first page on filter/search change
+    currentPage.value = 1;
+    fetchEmployees();
+});
+
+// Watch for changes in pagination or sorting and fetch data
+watch([currentPage, sortBy, sortOrder], () => {
     fetchEmployees();
 });
 </script>
